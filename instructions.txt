@@ -1,0 +1,468 @@
+
+# Implementing Cursor Integration for Task Master CLI
+
+## Overview
+
+This document provides instructions for implementing a Cursor integration adapter for the Task Master CLI that allows using Cursor's built-in AI capabilities instead of requiring an Anthropic API key.
+
+## Implementation Steps
+
+### 1. Create the Cursor Adapter Module
+
+Create a new file `scripts/modules/cursor-ai-adapter.js` with the following content:
+
+```javascript
+/**
+ * cursor-ai-adapter.js
+ * Adapter to use Cursor's built-in AI instead of Anthropic API
+ */
+
+import { CONFIG, log } from './utils.js';
+import { startLoadingIndicator, stopLoadingIndicator } from './ui.js';
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * Process task generation by writing prompts to a file for Cursor to process
+ * @param {string} prdContent - PRD content
+ * @param {string} prdPath - Path to the PRD file
+ * @param {number} numTasks - Number of tasks to generate
+ * @returns {Object} Generated tasks
+ */
+async function generateTasksWithCursor(prdContent, prdPath, numTasks) {
+  const loadingIndicator = startLoadingIndicator('Generating tasks from PRD...');
+  
+  try {
+    // Create a prompt file for Cursor to process
+    const systemPrompt = `You are an AI assistant helping to break down a Product Requirements Document (PRD) into a set of sequential development tasks. 
+Your goal is to create ${numTasks} well-structured, actionable development tasks based on the PRD provided.
+
+Each task should follow this JSON structure:
+{
+  "id": number,
+  "title": string,
+  "description": string,
+  "status": "pending",
+  "dependencies": number[] (IDs of tasks this depends on),
+  "priority": "high" | "medium" | "low",
+  "details": string (implementation details),
+  "testStrategy": string (validation approach)
+}
+
+Guidelines:
+1. Create exactly ${numTasks} tasks, numbered from 1 to ${numTasks}
+2. Each task should be atomic and focused on a single responsibility
+3. Order tasks logically - consider dependencies and implementation sequence
+4. Early tasks should focus on setup, core functionality first, then advanced features
+5. Include clear validation/testing approach for each task
+6. Set appropriate dependency IDs (a task can only depend on tasks with lower IDs)
+7. Assign priority (high/medium/low) based on criticality and dependency order
+8. Include detailed implementation guidance in the "details" field
+
+Expected output format:
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Setup Project Repository",
+      "description": "...",
+      ...
+    },
+    ...
+  ],
+  "metadata": {
+    "projectName": "PRD Implementation",
+    "totalTasks": ${numTasks},
+    "sourceFile": "${prdPath}",
+    "generatedAt": "YYYY-MM-DD"
+  }
+}
+
+Important: Your response must be valid JSON only, with no additional explanation or comments.`;
+
+    const userPrompt = `Here's the Product Requirements Document (PRD) to break down into ${numTasks} tasks:\n\n${prdContent}`;
+    
+    // Write the prompts to temporary files
+    const promptDir = path.join(process.cwd(), 'cursor_prompts');
+    if (!fs.existsSync(promptDir)) {
+      fs.mkdirSync(promptDir, { recursive: true });
+    }
+    
+    const systemPromptFile = path.join(promptDir, 'system_prompt.txt');
+    const userPromptFile = path.join(promptDir, 'user_prompt.txt');
+    const responseFile = path.join(promptDir, 'cursor_response.json');
+    
+    fs.writeFileSync(systemPromptFile, systemPrompt);
+    fs.writeFileSync(userPromptFile, userPrompt);
+    
+    // Instructions for user to process with Cursor
+    stopLoadingIndicator(loadingIndicator);
+    console.log('\n--------------------------------------------------------------');
+    console.log('To generate tasks with Cursor:');
+    console.log('1. Open the following files in Cursor:');
+    console.log(`   - System prompt: ${systemPromptFile}`);
+    console.log(`   - User prompt: ${userPromptFile}`);
+    console.log('2. Ask Cursor to generate the tasks based on these prompts');
+    console.log('3. Save the response as JSON to:');
+    console.log(`   - ${responseFile}`);
+    console.log('4. Continue this process when ready');
+    console.log('--------------------------------------------------------------\n');
+    
+    // Wait for user input to continue
+    const readline = await import('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    await new Promise((resolve) => {
+      rl.question('Press Enter once you have saved the Cursor response to continue...', () => {
+        rl.close();
+        resolve();
+      });
+    });
+    
+    // Check if response file exists
+    if (!fs.existsSync(responseFile)) {
+      throw new Error(`Response file not found: ${responseFile}`);
+    }
+    
+    // Read and parse the response
+    const responseText = fs.readFileSync(responseFile, 'utf8');
+    return JSON.parse(responseText);
+  } catch (error) {
+    stopLoadingIndicator(loadingIndicator);
+    log('error', `Error generating tasks with Cursor: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Generate subtasks using Cursor
+ * @param {Object} task - The task to expand
+ * @param {number} numSubtasks - Number of subtasks to generate
+ * @param {number} nextSubtaskId - Next subtask ID
+ * @param {string} additionalContext - Additional context
+ * @returns {Array} Generated subtasks
+ */
+async function generateSubtasksWithCursor(task, numSubtasks = 3, nextSubtaskId = 1, additionalContext = '') {
+  const loadingIndicator = startLoadingIndicator(`Preparing to generate ${numSubtasks} subtasks for task ${task.id}...`);
+  
+  try {
+    // Create prompt for subtask generation
+    const systemPrompt = `You are an expert software developer breaking down a development task into smaller subtasks.
+    
+Task to break down:
+Title: ${task.title}
+Description: ${task.description}
+Details: ${task.details || 'No additional details provided'}
+
+${additionalContext ? `Additional context: ${additionalContext}\n` : ''}
+
+Create exactly ${numSubtasks} subtasks that divide this task into logical, manageable pieces.
+Each subtask should follow this JSON format:
+{
+  "id": number,  // Subtask ID, starting from ${nextSubtaskId}
+  "title": string,  // Brief, descriptive title
+  "description": string,  // What needs to be done
+  "status": "pending",
+  "details": string,  // Implementation details and guidance
+  "testStrategy": string  // How to verify this subtask is complete
+}
+
+Guidelines:
+1. Create exactly ${numSubtasks} subtasks, numbered from ${nextSubtaskId} to ${nextSubtaskId + numSubtasks - 1}
+2. Each subtask should be atomic and focused
+3. Order subtasks logically - earlier subtasks should be prerequisites for later ones
+4. Include clear implementation details and testing approach
+5. Make sure all aspects of the parent task are covered by the subtasks
+
+Expected output format:
+[
+  {
+    "id": ${nextSubtaskId},
+    "title": "First Subtask",
+    "description": "...",
+    ...
+  },
+  ...
+]
+
+Important: Your response must be valid JSON array only, with no additional explanation or comments.`;
+
+    // Write the prompt to a temporary file
+    const promptDir = path.join(process.cwd(), 'cursor_prompts');
+    if (!fs.existsSync(promptDir)) {
+      fs.mkdirSync(promptDir, { recursive: true });
+    }
+    
+    const promptFile = path.join(promptDir, 'subtask_prompt.txt');
+    const responseFile = path.join(promptDir, 'subtask_response.json');
+    
+    fs.writeFileSync(promptFile, systemPrompt);
+    
+    // Instructions for user to process with Cursor
+    stopLoadingIndicator(loadingIndicator);
+    console.log('\n--------------------------------------------------------------');
+    console.log('To generate subtasks with Cursor:');
+    console.log('1. Open the following file in Cursor:');
+    console.log(`   - ${promptFile}`);
+    console.log('2. Ask Cursor to generate the subtasks based on this prompt');
+    console.log('3. Save the response as JSON to:');
+    console.log(`   - ${responseFile}`);
+    console.log('4. Continue this process when ready');
+    console.log('--------------------------------------------------------------\n');
+    
+    // Wait for user input to continue
+    const readline = await import('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    await new Promise((resolve) => {
+      rl.question('Press Enter once you have saved the Cursor response to continue...', () => {
+        rl.close();
+        resolve();
+      });
+    });
+    
+    // Check if response file exists
+    if (!fs.existsSync(responseFile)) {
+      throw new Error(`Response file not found: ${responseFile}`);
+    }
+    
+    // Read and parse the response
+    const responseText = fs.readFileSync(responseFile, 'utf8');
+    return JSON.parse(responseText);
+  } catch (error) {
+    stopLoadingIndicator(loadingIndicator);
+    log('error', `Error generating subtasks with Cursor: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Analyze task complexity using Cursor
+ * @param {Object} task - The task to analyze
+ * @returns {Object} Complexity analysis result
+ */
+async function analyzeTaskComplexityWithCursor(task) {
+  const loadingIndicator = startLoadingIndicator(`Preparing complexity analysis for task ${task.id}...`);
+  
+  try {
+    // Create prompt for complexity analysis
+    const systemPrompt = `You are an expert software developer analyzing the complexity of a development task.
+
+Task to analyze:
+Title: ${task.title}
+Description: ${task.description}
+Details: ${task.details || 'No additional details provided'}
+
+Analyze this task and provide:
+1. A complexity score from 1-10 (where 1 is trivial and 10 is extremely complex)
+2. A brief explanation of why you assigned this score
+3. Recommended number of subtasks (between 2-6)
+4. List of factors contributing to complexity
+
+Expected output format:
+{
+  "taskId": ${task.id},
+  "complexityScore": number,
+  "explanation": string,
+  "recommendedSubtasks": number,
+  "complexityFactors": [
+    string,
+    string,
+    ...
+  ]
+}
+
+Important: Your response must be valid JSON only, with no additional explanation or comments.`;
+
+    // Write the prompt to a temporary file
+    const promptDir = path.join(process.cwd(), 'cursor_prompts');
+    if (!fs.existsSync(promptDir)) {
+      fs.mkdirSync(promptDir, { recursive: true });
+    }
+    
+    const promptFile = path.join(promptDir, 'complexity_prompt.txt');
+    const responseFile = path.join(promptDir, 'complexity_response.json');
+    
+    fs.writeFileSync(promptFile, systemPrompt);
+    
+    // Instructions for user to process with Cursor
+    stopLoadingIndicator(loadingIndicator);
+    console.log('\n--------------------------------------------------------------');
+    console.log('To analyze task complexity with Cursor:');
+    console.log('1. Open the following file in Cursor:');
+    console.log(`   - ${promptFile}`);
+    console.log('2. Ask Cursor to analyze the task complexity based on this prompt');
+    console.log('3. Save the response as JSON to:');
+    console.log(`   - ${responseFile}`);
+    console.log('4. Continue this process when ready');
+    console.log('--------------------------------------------------------------\n');
+    
+    // Wait for user input to continue
+    const readline = await import('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    await new Promise((resolve) => {
+      rl.question('Press Enter once you have saved the Cursor response to continue...', () => {
+        rl.close();
+        resolve();
+      });
+    });
+    
+    // Check if response file exists
+    if (!fs.existsSync(responseFile)) {
+      throw new Error(`Response file not found: ${responseFile}`);
+    }
+    
+    // Read and parse the response
+    const responseText = fs.readFileSync(responseFile, 'utf8');
+    return JSON.parse(responseText);
+  } catch (error) {
+    stopLoadingIndicator(loadingIndicator);
+    log('error', `Error analyzing task complexity with Cursor: ${error.message}`);
+    throw error;
+  }
+}
+
+// Export the functions as replacements for the Anthropic-based ones
+export {
+  generateTasksWithCursor as callClaude,
+  generateSubtasksWithCursor as generateSubtasks,
+  analyzeTaskComplexityWithCursor as analyzeTaskComplexity
+};
+```
+
+### 2. Modify ai-services.js to Use the Cursor Adapter
+
+Update the `scripts/modules/ai-services.js` file to use the Cursor adapter when no API key is available:
+
+1. Add the import for the Cursor adapter at the top of the file:
+```javascript
+// Import Cursor adapter
+import * as cursorAdapter from './cursor-ai-adapter.js';
+```
+
+2. Modify the `callClaude` function to use the Cursor adapter when no API key is available:
+```javascript
+async function callClaude(prdContent, prdPath, numTasks, retryCount = 0) {
+  // If no API key is available, use the Cursor adapter
+  if (!process.env.ANTHROPIC_API_KEY) {
+    log('info', 'No Anthropic API key found, using Cursor integration instead...');
+    return await cursorAdapter.callClaude(prdContent, prdPath, numTasks);
+  }
+  
+  // Original function logic continues below
+  try {
+    // ...existing code...
+```
+
+3. Modify the `generateSubtasks` function similarly:
+```javascript
+async function generateSubtasks(task, numSubtasks, nextSubtaskId, additionalContext = '') {
+  // If no API key is available, use the Cursor adapter
+  if (!process.env.ANTHROPIC_API_KEY) {
+    log('info', 'No Anthropic API key found, using Cursor integration instead...');
+    return await cursorAdapter.generateSubtasks(task, numSubtasks, nextSubtaskId, additionalContext);
+  }
+  
+  // Original function logic continues below
+  // ...existing code...
+```
+
+4. If there's an `analyzeTaskComplexity` function, modify it similarly:
+```javascript
+async function analyzeTaskComplexity(task) {
+  // If no API key is available, use the Cursor adapter
+  if (!process.env.ANTHROPIC_API_KEY) {
+    log('info', 'No Anthropic API key found, using Cursor integration instead...');
+    return await cursorAdapter.analyzeTaskComplexity(task);
+  }
+  
+  // Original function logic continues below
+  // ...existing code...
+```
+
+### 3. Update .env.example File
+
+Update the `.env.example` file to indicate that the Anthropic API key is optional when using Cursor:
+
+```
+# API Keys
+ANTHROPIC_API_KEY=your_anthropic_api_key_here  # Optional when using Cursor integration
+PERPLEXITY_API_KEY=your_perplexity_api_key_here  # Required for research-backed features
+
+# Configuration
+MODEL=claude-3-7-sonnet-20250219
+MAX_TOKENS=4000
+TEMPERATURE=0.7
+DEBUG=false
+LOG_LEVEL=info
+DEFAULT_SUBTASKS=3
+DEFAULT_PRIORITY=medium
+PROJECT_NAME="My Project"
+PROJECT_VERSION="1.0.0"
+```
+
+### 4. Add Documentation in README.md
+
+Add a section to the project's README.md file to explain the Cursor integration:
+
+```markdown
+## Using Cursor Integration
+
+If you don't have an Anthropic API key, you can use the built-in Cursor integration:
+
+1. Run Task Master commands as usual without setting the ANTHROPIC_API_KEY environment variable
+2. When AI functionality is needed, the CLI will:
+   - Generate prompt files in the `cursor_prompts` directory
+   - Provide instructions to open these files in Cursor
+   - Wait for you to process the prompts with Cursor and save the responses
+   - Continue processing with the saved responses
+
+This interactive approach allows you to leverage Cursor's built-in AI capabilities while maintaining the same Task Master functionality.
+```
+
+## How to Use the Cursor Integration
+
+1. Run Task Master commands without the ANTHROPIC_API_KEY environment variable.
+2. When a command requires AI functionality (e.g., `parse-prd`, `expand`, `analyze-complexity`), the CLI will:
+   - Generate prompt files in the `cursor_prompts` directory
+   - Display instructions in the terminal
+   - Wait for you to complete the following steps:
+     a. Open the prompt file(s) in Cursor
+     b. Ask Cursor to respond to the prompt
+     c. Save Cursor's response to the specified JSON file
+     d. Press Enter in the terminal to continue
+3. The CLI will then process Cursor's response and continue with the command.
+
+## Example Workflow
+
+1. Run a command like `task-master parse-prd --input=requirements.txt`
+2. The CLI generates prompt files and displays instructions
+3. Open `system_prompt.txt` and `user_prompt.txt` in Cursor
+4. Ask Cursor: "Generate tasks based on these prompts and return valid JSON"
+5. Save Cursor's response to `cursor_response.json`
+6. Press Enter in the terminal
+7. The CLI continues processing, generating `tasks.json` and task files
+
+## Troubleshooting
+
+- **Invalid JSON Error**: Make sure Cursor's response is valid JSON without any additional text
+- **Response File Not Found**: Ensure you're saving the response to the exact path shown in the instructions
+- **Parsing Error**: Verify that Cursor's response follows the expected format for each command
+- **File Permission Issues**: Ensure the CLI has permission to read/write in the workspace directory
+
+## Best Practices
+
+- Keep prompt and response files for debugging purposes
+- Use a consistent workflow when interacting with Cursor
+- For complex prompts, copy only the exact content from the generated files
+- Review Cursor's responses before saving to ensure they match the expected format

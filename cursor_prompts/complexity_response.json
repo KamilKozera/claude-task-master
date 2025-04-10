@@ -1,0 +1,82 @@
+[
+  {
+    "taskId": 1,
+    "taskTitle": "Setup Next.js Project with TypeScript",
+    "complexityScore": 4,
+    "recommendedSubtasks": 3,
+    "expansionPrompt": "Break down the Next.js project setup into the following aspects: 1) Initial project creation and configuration, 2) Installing and configuring dependencies including Apache ECharts, 3) Setting up TypeScript configuration and project structure",
+    "reasoning": "Setting up a Next.js project has moderate complexity. While the initial setup is streamlined with create-next-app, properly configuring TypeScript, installing all required dependencies including Apache ECharts, and setting up the project structure according to best practices requires some effort and knowledge."
+  },
+  {
+    "taskId": 2,
+    "taskTitle": "Implement Basic Layout Structure",
+    "complexityScore": 6,
+    "recommendedSubtasks": 4,
+    "expansionPrompt": "Break down the layout implementation into: 1) Creating the three-panel layout skeleton, 2) Implementing the responsive design system, 3) Building collapsible panel functionality, 4) Setting up the navigation bar",
+    "reasoning": "Creating a responsive, three-panel layout with collapsible sections for mobile views requires significant CSS expertise. Ensuring proper responsiveness across different screen sizes, implementing collapsible functionality, and maintaining proper proportions adds complexity."
+  },
+  {
+    "taskId": 3,
+    "taskTitle": "Integrate Apache ECharts with Next.js",
+    "complexityScore": 7,
+    "recommendedSubtasks": 4,
+    "expansionPrompt": "Break down the ECharts integration into: 1) Creating the base chart component, 2) Implementing lifecycle management for the ECharts instance, 3) Setting up the chart rendering and configuration system, 4) Implementing cleanup and optimization for chart instances",
+    "reasoning": "Integrating Apache ECharts with React/Next.js is complex due to the need to properly manage lifecycle events, handle instance creation/destruction, implement efficient re-rendering strategies, and ensure proper cleanup to prevent memory leaks. This requires deep knowledge of both React and ECharts APIs."
+  },
+  {
+    "taskId": 4,
+    "taskTitle": "Implement State Management System",
+    "complexityScore": 8,
+    "recommendedSubtasks": 5,
+    "expansionPrompt": "Break down the state management implementation into: 1) Designing the state structure to match ECharts configuration schema, 2) Creating reducers and actions for state manipulation, 3) Implementing selectors and state access patterns, 4) Adding local storage persistence, 5) Implementing undo/redo functionality",
+    "reasoning": "Creating a comprehensive state management system for complex chart configurations is highly complex. The state structure must precisely match ECharts' schema, handle deep nested updates efficiently, support local storage persistence, and potentially implement history tracking. This requires advanced React patterns and careful performance optimization."
+  },
+  {
+    "taskId": 5,
+    "taskTitle": "Create Chart Components Panel",
+    "complexityScore": 7,
+    "recommendedSubtasks": 4,
+    "expansionPrompt": "Break down the chart components panel into: 1) Creating the collapsible sidebar structure, 2) Implementing component categorization and organization, 3) Adding drag-and-drop functionality, 4) Implementing search and filtering capability",
+    "reasoning": "Building a comprehensive components panel with drag-and-drop functionality, searchable components, and logical grouping is complex. The implementation requires advanced UI interactions, state management for component selection, and careful consideration of usability patterns."
+  },
+  {
+    "taskId": 6,
+    "taskTitle": "Build General Configuration Tab",
+    "complexityScore": 6,
+    "recommendedSubtasks": 4,
+    "expansionPrompt": "Break down the general configuration implementation into: 1) Creating the form structure and layout, 2) Implementing specialized input controls (color picker, toggles, etc.), 3) Adding real-time preview updates, 4) Implementing validation logic",
+    "reasoning": "Implementing the general configuration tab involves creating various custom form controls, ensuring real-time updates to the chart preview, and handling validation. The complexity comes from implementing specialized controls like color pickers and ensuring a good user experience with immediate feedback."
+  },
+  {
+    "taskId": 7,
+    "taskTitle": "Implement Axis and Grid Configuration",
+    "complexityScore": 7,
+    "recommendedSubtasks": 4,
+    "expansionPrompt": "Break down the axis and grid configuration into: 1) Implementing X-axis configuration controls, 2) Implementing Y-axis configuration controls, 3) Creating the grid configuration interface, 4) Adding interactive visual controls for positioning and sizing",
+    "reasoning": "Axis and grid configuration is complex because it requires specialized controls for many parameters, understanding the mathematical aspects of scales and ranges, and potentially implementing visual editors for grid positioning. This requires deep knowledge of ECharts' axis and grid configuration options."
+  },
+  {
+    "taskId": 8,
+    "taskTitle": "Add Advanced Components Configuration",
+    "complexityScore": 8,
+    "recommendedSubtasks": 5,
+    "expansionPrompt": "Break down advanced components configuration into: 1) Implementing DataZoom controls, 2) Creating VisualMap configuration interface, 3) Building Tooltip and AxisPointer configuration, 4) Implementing Toolbox settings, 5) Adding context-sensitive help for complex options",
+    "reasoning": "Advanced components like DataZoom and VisualMap have many configuration options and complex behaviors. Implementing intuitive interfaces for these components requires deep knowledge of ECharts, careful UI design for complex options, and extensive validation to ensure valid configurations."
+  },
+  {
+    "taskId": 9,
+    "taskTitle": "Implement Export Functionality",
+    "complexityScore": 6,
+    "recommendedSubtasks": 4,
+    "expansionPrompt": "Break down export functionality into: 1) Implementing JSON configuration export, 2) Creating React component code generation, 3) Adding image export capabilities, 4) Implementing clipboard operations and user feedback",
+    "reasoning": "Implementing export functionality involves several distinct technologies: JSON formatting for configuration export, code generation for React components, canvas/SVG manipulation for image exports, and clipboard API integration. Each requires specific technical knowledge and error handling."
+  },
+  {
+    "taskId": 10,
+    "taskTitle": "Add Theme Support and Final Polish",
+    "complexityScore": 7,
+    "recommendedSubtasks": 5,
+    "expansionPrompt": "Break down theme support and polish into: 1) Implementing light/dark theme system, 2) Creating theme switching mechanism, 3) Optimizing performance for complex configurations, 4) Adding error boundaries and loading states, 5) Implementing accessibility improvements",
+    "reasoning": "Adding comprehensive theme support and final polish touches many parts of the application. It requires implementing a theming system that affects both the UI and generated charts, ensuring performance optimizations, adding proper error handling, and implementing accessibility features. The wide scope and cross-cutting nature of these changes adds complexity."
+  }
+] 

@@ -1,3 +1,5 @@
+Here's the Product Requirements Document (PRD) to break down into 10 tasks:
+
 # Product Requirements Document: NextCharts - Next.js UI Wrapper for Apache ECharts
 
 ## Overview

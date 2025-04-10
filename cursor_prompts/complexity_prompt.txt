@@ -1,0 +1,79 @@
+You are an expert software developer analyzing the complexity of multiple development tasks.
+
+Tasks to analyze:
+
+Task ID: 1
+Title: Setup Next.js Project with TypeScript
+Description: Initialize a Next.js project with TypeScript support and install necessary dependencies
+Details: Create a new Next.js project using the create-next-app CLI tool with TypeScript template. Configure the project structure following Next.js best practices. Install required dependencies including Apache ECharts, React 18+, and Tailwind CSS or another CSS framework for styling. Set up basic configuration files including tsconfig.json with appropriate settings for the project.
+
+Task ID: 2
+Title: Implement Basic Layout Structure
+Description: Create the core layout structure with sidebars and chart preview area
+Details: Implement the three-panel layout: left sidebar for chart components panel, center area for chart preview, and right sidebar for configuration panels with tabs. Create responsive layout that works across different screen sizes. Implement collapsible panels for mobile views. Set up navigation bar at the top for export options and other actions. Use CSS Grid or Flexbox for layout structuring with appropriate breakpoints for responsive design.
+
+Task ID: 3
+Title: Integrate Apache ECharts with Next.js
+Description: Set up Apache ECharts integration with Next.js and create base chart component
+Details: Create a base chart component that integrates Apache ECharts with React/Next.js. Implement proper lifecycle management for the ECharts instance, including initialization, resize handling, and cleanup. Set up the chart rendering logic with option passing. Handle chart initialization and updates efficiently. Implement a mechanism to pass configuration options to the chart. Set up chart instance cleanup on component unmount to prevent memory leaks.
+
+Task ID: 4
+Title: Implement State Management System
+Description: Create a state management system for chart configuration using React Context API or Redux
+Details: Implement a state management system using React Context API or Redux to manage chart configuration state. Create necessary reducers, actions, and selectors for manipulating chart options. Set up proper state structure to match ECharts configuration schema. Implement local storage integration to save draft configurations. Ensure efficient updates by minimizing unnecessary re-renders. Create a system for tracking configuration history/undo capability.
+
+Task ID: 5
+Title: Create Chart Components Panel
+Description: Implement the left sidebar with all available chart components
+Details: Create a collapsible panel on the left sidebar displaying all available ECharts components like Title, Legend, Grid, xAxis, yAxis, etc. Implement drag-and-drop functionality to add components to the chart configuration. Organize components into logical groups with expandable sections. Add search/filter functionality to find components easily. Implement component icons or visual representations for better usability.
+
+Task ID: 6
+Title: Build General Configuration Tab
+Description: Implement the general configuration tab with basic chart settings
+Details: Create the general configuration tab containing chart title input field, background color picker with hex input, chart type selector (bar, line, pie, etc.), animation toggle and duration settings, and zoom functionality toggle. Implement real-time updating of preview as settings change. Add validation for input fields. Use appropriate UI controls for each setting type (color pickers, dropdowns, toggles, etc.).
+
+Task ID: 7
+Title: Implement Axis and Grid Configuration
+Description: Build configuration panels for axes and grid settings
+Details: Create configuration panels for X and Y axes with settings for axis title, labels, tick configuration, scale, range, and grid lines. Implement grid configuration with spacing, positioning, and formatting controls. Add visual controls where possible (sliders, visual grid editor). Include responsive settings that adapt to chart size changes. Implement proper validation for numeric input fields.
+
+Task ID: 8
+Title: Add Advanced Components Configuration
+Description: Implement configuration panels for advanced chart components
+Details: Create configuration panels for advanced ECharts components including DataZoom, VisualMap, Tooltip, AxisPointer, Toolbox, etc. Implement specialized controls for each component type based on its specific options. Group related settings logically within each panel. Add help text or tooltips explaining complex options. Implement validation for component-specific settings.
+
+Task ID: 9
+Title: Implement Export Functionality
+Description: Create export options for finished chart configurations
+Details: Implement functionality to export finished chart configuration as JSON, generate React/Next.js component code, download chart as image (PNG/SVG), and copy configuration to clipboard. Create clean, formatted output for generated code. Implement proper error handling for export operations. Add visual feedback during export processes. Optimize image export quality and file size.
+
+Task ID: 10
+Title: Add Theme Support and Final Polish
+Description: Implement theme support (light/dark mode) and polish the UI
+Details: Add theme support with light and dark mode options that affect both the UI and generated charts. Implement theme switching functionality. Polish UI elements for a professional look and feel. Optimize performance for complex configurations. Add final touches like loading states, error boundaries, and helpful empty states. Implement comprehensive keyboard navigation for accessibility. Add final responsive design adjustments for edge cases.
+
+For each task, please analyze and provide:
+1. A complexity score from 1-10 (where 1 is trivial and 10 is extremely complex)
+2. A brief explanation of why you assigned this score
+3. Recommended number of subtasks (between 2-6)
+4. List of factors contributing to complexity
+
+Expected output format:
+[
+  {
+    "taskId": 1,
+    "taskTitle": "Setup Next.js Project with TypeScript",
+    "complexityScore": number,
+    "recommendedSubtasks": number,
+    "expansionPrompt": "A detailed prompt for breaking down this task into subtasks",
+    "reasoning": "Explanation for why this complexity score was assigned"
+  },
+  {
+    "taskId": 2,
+    ...
+  }
+  // and so on for all 10 tasks
+]
+
+Important: Your response must be valid JSON only, with no additional explanation or comments.
+Make sure the JSON can be parsed without any preprocessing. 

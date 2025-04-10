@@ -15,9 +15,7 @@
       "title": "Implement Basic Layout Structure",
       "description": "Create the core layout structure with sidebars and chart preview area",
       "status": "pending",
-      "dependencies": [
-        1
-      ],
+      "dependencies": [1],
       "priority": "high",
       "details": "Implement the three-panel layout: left sidebar for chart components panel, center area for chart preview, and right sidebar for configuration panels with tabs. Create responsive layout that works across different screen sizes. Implement collapsible panels for mobile views. Set up navigation bar at the top for export options and other actions. Use CSS Grid or Flexbox for layout structuring with appropriate breakpoints for responsive design.",
       "testStrategy": "Test layout on different screen sizes to verify responsiveness. Check that panels collapse and expand correctly on mobile views. Verify that the layout maintains proper proportions across different viewport sizes. Test navigation elements for proper positioning and visibility."
@@ -27,9 +25,7 @@
       "title": "Integrate Apache ECharts with Next.js",
       "description": "Set up Apache ECharts integration with Next.js and create base chart component",
       "status": "pending",
-      "dependencies": [
-        1
-      ],
+      "dependencies": [1],
       "priority": "high",
       "details": "Create a base chart component that integrates Apache ECharts with React/Next.js. Implement proper lifecycle management for the ECharts instance, including initialization, resize handling, and cleanup. Set up the chart rendering logic with option passing. Handle chart initialization and updates efficiently. Implement a mechanism to pass configuration options to the chart. Set up chart instance cleanup on component unmount to prevent memory leaks.",
       "testStrategy": "Verify that a simple chart renders correctly. Test chart resize handling by changing viewport size. Check that chart updates when configuration changes without full re-renders. Validate proper cleanup by monitoring memory usage during component mount/unmount cycles."
@@ -39,11 +35,7 @@
       "title": "Implement State Management System",
       "description": "Create a state management system for chart configuration using React Context API or Redux",
       "status": "pending",
-      "dependencies": [
-        1,
-        2,
-        3
-      ],
+      "dependencies": [1, 2, 3],
       "priority": "high",
       "details": "Implement a state management system using React Context API or Redux to manage chart configuration state. Create necessary reducers, actions, and selectors for manipulating chart options. Set up proper state structure to match ECharts configuration schema. Implement local storage integration to save draft configurations. Ensure efficient updates by minimizing unnecessary re-renders. Create a system for tracking configuration history/undo capability.",
       "testStrategy": "Test state updates with various configuration changes. Verify that state is correctly persisted in local storage. Check that state changes reflect in the chart preview. Validate that the state structure properly maps to ECharts options. Test undo/redo functionality if implemented."
@@ -53,10 +45,7 @@
       "title": "Create Chart Components Panel",
       "description": "Implement the left sidebar with all available chart components",
       "status": "pending",
-      "dependencies": [
-        2,
-        4
-      ],
+      "dependencies": [2, 4],
       "priority": "medium",
       "details": "Create a collapsible panel on the left sidebar displaying all available ECharts components like Title, Legend, Grid, xAxis, yAxis, etc. Implement drag-and-drop functionality to add components to the chart configuration. Organize components into logical groups with expandable sections. Add search/filter functionality to find components easily. Implement component icons or visual representations for better usability.",
       "testStrategy": "Test adding each component type to a chart configuration. Verify that drag-and-drop functionality works correctly. Check that components are correctly grouped and organized. Validate search/filter functionality with various search terms. Test collapsible behavior of component groups."
@@ -66,10 +55,7 @@
       "title": "Build General Configuration Tab",
       "description": "Implement the general configuration tab with basic chart settings",
       "status": "pending",
-      "dependencies": [
-        3,
-        4
-      ],
+      "dependencies": [3, 4],
       "priority": "medium",
       "details": "Create the general configuration tab containing chart title input field, background color picker with hex input, chart type selector (bar, line, pie, etc.), animation toggle and duration settings, and zoom functionality toggle. Implement real-time updating of preview as settings change. Add validation for input fields. Use appropriate UI controls for each setting type (color pickers, dropdowns, toggles, etc.).",
       "testStrategy": "Test each individual control to verify it updates the chart correctly. Check input validation for fields like color hex values. Verify that chart type changes update the preview accurately. Test animation settings to ensure they apply correctly. Validate zoom functionality with different chart types."
@@ -79,11 +65,7 @@
       "title": "Implement Axis and Grid Configuration",
       "description": "Build configuration panels for axes and grid settings",
       "status": "pending",
-      "dependencies": [
-        3,
-        4,
-        6
-      ],
+      "dependencies": [3, 4, 6],
       "priority": "medium",
       "details": "Create configuration panels for X and Y axes with settings for axis title, labels, tick configuration, scale, range, and grid lines. Implement grid configuration with spacing, positioning, and formatting controls. Add visual controls where possible (sliders, visual grid editor). Include responsive settings that adapt to chart size changes. Implement proper validation for numeric input fields.",
       "testStrategy": "Test all axis settings to verify they reflect correctly in the chart. Validate grid configurations with different spacing and positioning options. Check interaction between grid and axis settings to ensure they work together properly. Test edge cases like very large or small values for scales and ranges."
@@ -93,11 +75,7 @@
       "title": "Add Advanced Components Configuration",
       "description": "Implement configuration panels for advanced chart components",
       "status": "pending",
-      "dependencies": [
-        3,
-        4,
-        5
-      ],
+      "dependencies": [3, 4, 5],
       "priority": "medium",
       "details": "Create configuration panels for advanced ECharts components including DataZoom, VisualMap, Tooltip, AxisPointer, Toolbox, etc. Implement specialized controls for each component type based on its specific options. Group related settings logically within each panel. Add help text or tooltips explaining complex options. Implement validation for component-specific settings.",
       "testStrategy": "Test configuration of each advanced component type. Validate that complex components like DataZoom and VisualMap work correctly when configured. Check interactions between components that might affect each other. Verify help text and tooltips provide useful information."
@@ -107,10 +85,7 @@
       "title": "Implement Export Functionality",
       "description": "Create export options for finished chart configurations",
       "status": "pending",
-      "dependencies": [
-        3,
-        4
-      ],
+      "dependencies": [3, 4],
       "priority": "low",
       "details": "Implement functionality to export finished chart configuration as JSON, generate React/Next.js component code, download chart as image (PNG/SVG), and copy configuration to clipboard. Create clean, formatted output for generated code. Implement proper error handling for export operations. Add visual feedback during export processes. Optimize image export quality and file size.",
       "testStrategy": "Validate exported JSON against ECharts schema. Test generated React components by importing them into a test project. Verify image exports produce correct visual output at appropriate quality. Test clipboard operations across different browsers. Check error handling by simulating export failures."
@@ -120,14 +95,7 @@
       "title": "Add Theme Support and Final Polish",
       "description": "Implement theme support (light/dark mode) and polish the UI",
       "status": "pending",
-      "dependencies": [
-        2,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
+      "dependencies": [2, 5, 6, 7, 8, 9],
       "priority": "low",
       "details": "Add theme support with light and dark mode options that affect both the UI and generated charts. Implement theme switching functionality. Polish UI elements for a professional look and feel. Optimize performance for complex configurations. Add final touches like loading states, error boundaries, and helpful empty states. Implement comprehensive keyboard navigation for accessibility. Add final responsive design adjustments for edge cases.",
       "testStrategy": "Test theme switching to verify both UI and charts update correctly. Validate performance with complex chart configurations. Check accessibility using screen readers and keyboard navigation. Test error boundaries by forcing component errors. Verify responsive design on unusual screen sizes and orientations."
@@ -139,4 +107,4 @@
     "sourceFile": "scripts/prd.txt",
     "generatedAt": "2023-07-17"
   }
-}
+} 

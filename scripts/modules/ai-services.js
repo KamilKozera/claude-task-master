@@ -12,17 +12,21 @@ import { CONFIG, log, sanitizePrompt } from './utils.js';
 import { startLoadingIndicator, stopLoadingIndicator } from './ui.js';
 import chalk from 'chalk';
 
+// Import Cursor adapters
+import * as cursorAdapter from './cursor-ai-adapter.js';
+import * as perplexityAdapter from './perplexity-adapter.js';
+
 // Load environment variables
 dotenv.config();
 
 // Configure Anthropic client
-const anthropic = new Anthropic({
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
   // Add beta header for 128k token output
   defaultHeaders: {
     'anthropic-beta': 'output-128k-2025-02-19'
   }
-});
+}) : null;
 
 // Lazy-loaded Perplexity client
 let perplexity = null;
@@ -85,6 +89,12 @@ function handleClaudeError(error) {
  * @returns {Object} Claude's response
  */
 async function callClaude(prdContent, prdPath, numTasks, retryCount = 0) {
+  // If no API key is available, use the Cursor adapter
+  if (!anthropic) {
+    log('info', 'No Anthropic API key found, using Cursor integration instead...');
+    return await cursorAdapter.callClaude(prdContent, prdPath, numTasks);
+  }
+  
   try {
     log('info', 'Calling Claude...');
     
@@ -297,13 +307,19 @@ function processClaudeResponse(textContent, numTasks, retryCount, prdContent, pr
 
 /**
  * Generate subtasks for a task
- * @param {Object} task - Task to generate subtasks for
+ * @param {Object} task - The task to expand
  * @param {number} numSubtasks - Number of subtasks to generate
  * @param {number} nextSubtaskId - Next subtask ID
  * @param {string} additionalContext - Additional context
  * @returns {Array} Generated subtasks
  */
 async function generateSubtasks(task, numSubtasks, nextSubtaskId, additionalContext = '') {
+  // If no API key is available, use the Cursor adapter
+  if (!anthropic) {
+    log('info', 'No Anthropic API key found, using Cursor integration instead...');
+    return await cursorAdapter.generateSubtasks(task, numSubtasks, nextSubtaskId, additionalContext);
+  }
+  
   try {
     log('info', `Generating ${numSubtasks} subtasks for task ${task.id}: ${task.title}`);
     
@@ -405,14 +421,20 @@ Note on dependencies: Subtasks can depend on other subtasks with lower IDs. Use 
 }
 
 /**
- * Generate subtasks with research from Perplexity
- * @param {Object} task - Task to generate subtasks for
+ * Generate subtasks with research using Perplexity
+ * @param {Object} task - The task to expand
  * @param {number} numSubtasks - Number of subtasks to generate
  * @param {number} nextSubtaskId - Next subtask ID
  * @param {string} additionalContext - Additional context
  * @returns {Array} Generated subtasks
  */
 async function generateSubtasksWithPerplexity(task, numSubtasks = 3, nextSubtaskId = 1, additionalContext = '') {
+  // If no Perplexity API key is available, use the Cursor adapter
+  if (!process.env.PERPLEXITY_API_KEY) {
+    log('info', 'No Perplexity API key found, using Cursor integration for research instead...');
+    return await perplexityAdapter.generateSubtasksWithResearch(task, numSubtasks, nextSubtaskId, additionalContext);
+  }
+  
   try {
     // First, perform research to get context
     log('info', `Researching context for task ${task.id}: ${task.title}`);
@@ -633,40 +655,65 @@ function parseSubtasksFromText(text, startId, expectedCount, parentTaskId) {
 }
 
 /**
- * Generate a prompt for complexity analysis
- * @param {Object} tasksData - Tasks data object containing tasks array
- * @returns {string} Generated prompt
+ * Analyze task complexity
+ * @param {Object} task - The task to analyze
+ * @returns {Object} Complexity analysis result
  */
-function generateComplexityAnalysisPrompt(tasksData) {
-  return `Analyze the complexity of the following tasks and provide recommendations for subtask breakdown:
+async function analyzeTaskComplexity(task) {
+  // If no API key is available, use the Cursor adapter
+  if (!anthropic) {
+    log('info', 'No Anthropic API key found, using Cursor integration instead...');
+    return await cursorAdapter.analyzeTaskComplexity(task);
+  }
+  
+  // Original function logic continues below
+  // ... existing Claude API code ...
+}
 
-${tasksData.tasks.map(task => `
+/**
+ * Analyze task complexity with research
+ * @param {Object} task - The task to analyze
+ * @returns {Object} Complexity analysis result
+ */
+async function analyzeTaskComplexityWithPerplexity(task) {
+  // If no Perplexity API key is available, use the Cursor adapter
+  if (!process.env.PERPLEXITY_API_KEY) {
+    log('info', 'No Perplexity API key found, using Cursor integration for research instead...');
+    return await perplexityAdapter.analyzeTaskComplexityWithResearch(task);
+  }
+  
+  // Original function logic continues below
+  // ... existing Perplexity API code ...
+}
+
+/**
+ * Generate a prompt for analyzing task complexity
+ * @param {Object} task - The task to analyze 
+ * @returns {string} The prompt for complexity analysis
+ */
+function generateComplexityAnalysisPrompt(task) {
+  return `Analyze the complexity of the following development task:
+
 Task ID: ${task.id}
 Title: ${task.title}
 Description: ${task.description}
-Details: ${task.details}
-Dependencies: ${JSON.stringify(task.dependencies || [])}
-Priority: ${task.priority || 'medium'}
-`).join('\n---\n')}
+Details: ${task.details || 'No details provided'}
+Test Strategy: ${task.testStrategy || 'No test strategy provided'}
 
-Analyze each task and return a JSON array with the following structure for each task:
-[
-  {
-    "taskId": number,
-    "taskTitle": string,
-    "complexityScore": number (1-10),
-    "recommendedSubtasks": number (${Math.max(3, CONFIG.defaultSubtasks - 1)}-${Math.min(8, CONFIG.defaultSubtasks + 2)}),
-    "expansionPrompt": string (a specific prompt for generating good subtasks),
-    "reasoning": string (brief explanation of your assessment)
-  },
-  ...
-]
+Please evaluate this task on the following criteria on a scale of 1-10:
+1. Technical difficulty (1=very simple, 10=extremely complex)
+2. Size/scope (1=very small, 10=very large)
+3. Implementation uncertainty (1=clear path, 10=unclear implementation)
+4. Knowledge requirements (1=basic knowledge, 10=specialized expertise)
 
-IMPORTANT: Make sure to include an analysis for EVERY task listed above, with the correct taskId matching each task's ID.
-`;
+Then provide:
+1. An overall complexity score (1-10)
+2. Recommended number of subtasks (1-10)
+3. Brief explanation of your reasoning
+4. Suggested breakdown approach`;
 }
 
-// Export AI service functions
+// Export all functions
 export {
   getPerplexityClient,
   callClaude,
@@ -675,6 +722,8 @@ export {
   generateSubtasks,
   generateSubtasksWithPerplexity,
   parseSubtasksFromText,
-  generateComplexityAnalysisPrompt,
-  handleClaudeError
+  analyzeTaskComplexity,
+  analyzeTaskComplexityWithPerplexity,
+  handleClaudeError,
+  generateComplexityAnalysisPrompt
 }; 

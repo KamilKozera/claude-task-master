@@ -1,18 +1,11 @@
 # Task ID: 3
-# Title: Implement Basic Task Operations
-# Status: done
+# Title: Integrate Apache ECharts with Next.js
+# Status: pending
 # Dependencies: 1
 # Priority: high
-# Description: Create core functionality for managing tasks including listing, creating, updating, and deleting tasks.
+# Description: Set up Apache ECharts integration with Next.js and create base chart component
 # Details:
-Implement the following task operations:
-- List tasks with filtering options
-- Create new tasks with required fields
-- Update existing task properties
-- Delete tasks
-- Change task status (pending/done/deferred)
-- Handle dependencies between tasks
-- Manage task priorities
+Create a base chart component that integrates Apache ECharts with React/Next.js. Implement proper lifecycle management for the ECharts instance, including initialization, resize handling, and cleanup. Set up the chart rendering logic with option passing. Handle chart initialization and updates efficiently. Implement a mechanism to pass configuration options to the chart. Set up chart instance cleanup on component unmount to prevent memory leaks.
 
 # Test Strategy:
-Test each operation with valid and invalid inputs. Verify that dependencies are properly tracked and that status changes are reflected correctly in the tasks.json file.
+Verify that a simple chart renders correctly. Test chart resize handling by changing viewport size. Check that chart updates when configuration changes without full re-renders. Validate proper cleanup by monitoring memory usage during component mount/unmount cycles.

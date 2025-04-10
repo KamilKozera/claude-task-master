@@ -113,7 +113,7 @@ function registerCommands(programInstance) {
     .option('-f, --file <file>', 'Path to the tasks file', 'tasks/tasks.json')
     .option('--from <id>', 'Task ID to start updating from (tasks with ID >= this value will be updated)', '1')
     .option('-p, --prompt <text>', 'Prompt explaining the changes or new context (required)')
-    .option('-r, --research', 'Use Perplexity AI for research-backed task updates')
+    .option('-r, --research', 'Use Cursor for research-backed task updates')
     .action(async (options) => {
       const tasksPath = options.file;
       const fromId = parseInt(options.from, 10);
@@ -129,7 +129,7 @@ function registerCommands(programInstance) {
       console.log(chalk.blue(`Tasks file: ${tasksPath}`));
       
       if (useResearch) {
-        console.log(chalk.blue('Using Perplexity AI for research-backed task updates'));
+        console.log(chalk.blue('Using Cursor for research-backed task updates'));
       }
       
       await updateTasks(tasksPath, fromId, prompt, useResearch);
@@ -204,7 +204,7 @@ function registerCommands(programInstance) {
     .option('-i, --id <id>', 'Task ID to expand')
     .option('-a, --all', 'Expand all tasks')
     .option('-n, --num <number>', 'Number of subtasks to generate', CONFIG.defaultSubtasks.toString())
-    .option('--research', 'Enable Perplexity AI for research-backed subtask generation')
+    .option('-r, --research', 'Use Cursor for research-backed expansion (more comprehensive)')
     .option('-p, --prompt <text>', 'Additional context to guide subtask generation')
     .option('--force', 'Force regeneration of subtasks for tasks that already have them')
     .action(async (options) => {
@@ -222,7 +222,7 @@ function registerCommands(programInstance) {
       if (allFlag) {
         console.log(chalk.blue(`Expanding all tasks with ${numSubtasks} subtasks each...`));
         if (useResearch) {
-          console.log(chalk.blue('Using Perplexity AI for research-backed subtask generation'));
+          console.log(chalk.blue('Using Cursor for research-backed subtask generation'));
         } else {
           console.log(chalk.yellow('Research-backed subtask generation disabled'));
         }
@@ -233,7 +233,7 @@ function registerCommands(programInstance) {
       } else if (idArg) {
         console.log(chalk.blue(`Expanding task ${idArg} with ${numSubtasks} subtasks...`));
         if (useResearch) {
-          console.log(chalk.blue('Using Perplexity AI for research-backed subtask generation'));
+          console.log(chalk.blue('Using Cursor for research-backed subtask generation'));
         } else {
           console.log(chalk.yellow('Research-backed subtask generation disabled'));
         }
@@ -254,7 +254,7 @@ function registerCommands(programInstance) {
     .option('-m, --model <model>', 'LLM model to use for analysis (defaults to configured model)')
     .option('-t, --threshold <number>', 'Minimum complexity score to recommend expansion (1-10)', '5')
     .option('-f, --file <file>', 'Path to the tasks file', 'tasks/tasks.json')
-    .option('-r, --research', 'Use Perplexity AI for research-backed complexity analysis')
+    .option('-r, --research', 'Use Cursor for research-backed analysis (more comprehensive)')
     .action(async (options) => {
       const tasksPath = options.file || 'tasks/tasks.json';
       const outputPath = options.output;
@@ -266,7 +266,7 @@ function registerCommands(programInstance) {
       console.log(chalk.blue(`Output report will be saved to: ${outputPath}`));
       
       if (useResearch) {
-        console.log(chalk.blue('Using Perplexity AI for research-backed complexity analysis'));
+        console.log(chalk.blue('Using Cursor for research-backed complexity analysis'));
       }
       
       await analyzeTaskComplexity(options);

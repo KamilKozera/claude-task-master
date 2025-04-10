@@ -274,13 +274,13 @@ function displayHelp() {
       color: 'yellow',
       commands: [
         { name: 'analyze-complexity', args: '[--research] [--threshold=5]', 
-          desc: 'Analyze tasks and generate expansion recommendations' },
+          desc: 'Analyze tasks and generate expansion recommendations using Cursor' },
         { name: 'complexity-report', args: '[--file=<path>]',
           desc: 'Display the complexity analysis report' },
         { name: 'expand', args: '--id=<id> [--num=5] [--research] [--prompt="<context>"]', 
-          desc: 'Break down tasks into detailed subtasks' },
+          desc: 'Break down tasks into detailed subtasks using Cursor' },
         { name: 'expand --all', args: '[--force] [--research]', 
-          desc: 'Expand all pending tasks with subtasks' },
+          desc: 'Expand all pending tasks with subtasks using Cursor' },
         { name: 'clear-subtasks', args: '--id=<id>', 
           desc: 'Remove subtasks from specified tasks' }
       ]

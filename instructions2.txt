@@ -1,0 +1,431 @@
+
+# Task Master CLI Implementation with Cursor Claude 3.7 Sonnet
+
+This document expands on the initial instructions to implement a complete solution that works entirely with Cursor Claude 3.7 Sonnet without requiring any external API keys.
+
+## 1. Core Adaptation Components
+
+### Create the Cursor Adapter Module
+
+Follow the instructions in the original document to create `scripts/modules/cursor-ai-adapter.js` with the three main functions:
+- `generateTasksWithCursor`
+- `generateSubtasksWithCursor`
+- `analyzeTaskComplexityWithCursor`
+
+### Add Research-Backed Generation Function
+
+Add this additional function to `cursor-ai-adapter.js` to handle research features without requiring Perplexity API:
+
+```javascript
+/**
+ * Generate research-backed content using Cursor
+ * @param {string} query - Research query
+ * @param {string} context - Additional context
+ * @returns {Object} Research results
+ */
+async function generateResearchWithCursor(query, context = '') {
+  const loadingIndicator = startLoadingIndicator(`Preparing research for: ${query}...`);
+  
+  try {
+    // Create prompt for research
+    const systemPrompt = `You are an AI research assistant helping a developer with a technical question.
+    
+Research query: ${query}
+
+${context ? `Additional context: ${context}\n` : ''}
+
+Please conduct detailed research on this topic and provide:
+1. A thorough analysis of the question
+2. Relevant code examples and implementation approaches
+3. Best practices and potential pitfalls
+4. Links to relevant documentation (if applicable)
+5. A summary of your findings
+
+Expected output format:
+{
+  "query": "${query}",
+  "analysis": string,
+  "codeExamples": [
+    {
+      "language": string,
+      "description": string,
+      "code": string
+    },
+    ...
+  ],
+  "bestPractices": [
+    string,
+    ...
+  ],
+  "pitfalls": [
+    string,
+    ...
+  ],
+  "documentationLinks": [
+    {
+      "title": string,
+      "url": string,
+      "description": string
+    },
+    ...
+  ],
+  "summary": string
+}
+
+Important: Your response must be valid JSON only, with no additional explanation or comments.`;
+
+    // Write the prompt to a temporary file
+    const promptDir = path.join(process.cwd(), 'cursor_prompts');
+    if (!fs.existsSync(promptDir)) {
+      fs.mkdirSync(promptDir, { recursive: true });
+    }
+    
+    const promptFile = path.join(promptDir, 'research_prompt.txt');
+    const responseFile = path.join(promptDir, 'research_response.json');
+    
+    fs.writeFileSync(promptFile, systemPrompt);
+    
+    // Instructions for user to process with Cursor
+    stopLoadingIndicator(loadingIndicator);
+    console.log('\n--------------------------------------------------------------');
+    console.log('To generate research with Cursor:');
+    console.log('1. Open the following file in Cursor:');
+    console.log(`   - ${promptFile}`);
+    console.log('2. Ask Cursor to research this topic and respond in the requested format');
+    console.log('3. Save the response as JSON to:');
+    console.log(`   - ${responseFile}`);
+    console.log('4. Continue this process when ready');
+    console.log('--------------------------------------------------------------\n');
+    
+    // Wait for user input to continue
+    const readline = await import('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    await new Promise((resolve) => {
+      rl.question('Press Enter once you have saved the Cursor response to continue...', () => {
+        rl.close();
+        resolve();
+      });
+    });
+    
+    // Check if response file exists
+    if (!fs.existsSync(responseFile)) {
+      throw new Error(`Response file not found: ${responseFile}`);
+    }
+    
+    // Read and parse the response
+    const responseText = fs.readFileSync(responseFile, 'utf8');
+    return JSON.parse(responseText);
+  } catch (error) {
+    stopLoadingIndicator(loadingIndicator);
+    log('error', `Error generating research with Cursor: ${error.message}`);
+    throw error;
+  }
+}
+
+// Add to exports
+export {
+  generateTasksWithCursor as callClaude,
+  generateSubtasksWithCursor as generateSubtasks,
+  analyzeTaskComplexityWithCursor as analyzeTaskComplexity,
+  generateResearchWithCursor as generateResearch
+};
+```
+
+## 2. Replace Perplexity Functions
+
+Create a new file `scripts/modules/perplexity-adapter.js` to handle research-backed features without Perplexity API:
+
+```javascript
+/**
+ * perplexity-adapter.js
+ * Adapter to replace Perplexity API with Cursor for research-backed features
+ */
+
+import { CONFIG, log } from './utils.js';
+import { generateResearch } from './cursor-ai-adapter.js';
+
+/**
+ * Generate subtasks with research using Cursor
+ * @param {Object} task - The task to expand
+ * @param {number} numSubtasks - Number of subtasks to generate
+ * @param {number} nextSubtaskId - Next subtask ID
+ * @param {string} additionalContext - Additional context
+ * @returns {Array} Generated subtasks
+ */
+async function generateSubtasksWithResearch(task, numSubtasks = 3, nextSubtaskId = 1, additionalContext = '') {
+  try {
+    log('info', `Generating research for task ${task.id} to help with subtask creation...`);
+    
+    // First, conduct research on the task
+    const researchQuery = `Research best practices, implementation approaches, and technical considerations for: ${task.title} - ${task.description}`;
+    const researchResult = await generateResearch(researchQuery, task.details);
+    
+    // Then use research to inform subtask generation
+    const enhancedContext = `
+Based on research findings:
+${researchResult.analysis}
+
+Best practices to consider:
+${researchResult.bestPractices.join('\n')}
+
+Potential implementation approaches:
+${researchResult.codeExamples.map(ex => `- ${ex.description}`).join('\n')}
+
+${additionalContext ? `\nAdditional context provided: ${additionalContext}` : ''}
+`;
+    
+    // Use the standard subtask generator with enhanced context
+    const { generateSubtasks } = await import('./cursor-ai-adapter.js');
+    return await generateSubtasks(task, numSubtasks, nextSubtaskId, enhancedContext);
+  } catch (error) {
+    log('error', `Error generating research-backed subtasks: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Analyze task complexity with research using Cursor
+ * @param {Object} task - The task to analyze
+ * @returns {Object} Complexity analysis result
+ */
+async function analyzeTaskComplexityWithResearch(task) {
+  try {
+    log('info', `Researching complexity factors for task ${task.id}...`);
+    
+    // Conduct research on the task complexity
+    const researchQuery = `Analyze implementation complexity factors for: ${task.title} - ${task.description}`;
+    const researchResult = await generateResearch(researchQuery, task.details);
+    
+    // Use the research to create an enhanced prompt for complexity analysis
+    const enhancedTask = {
+      ...task,
+      details: `
+${task.details || 'No details provided'}
+
+Research-based complexity considerations:
+${researchResult.analysis}
+
+Technical factors:
+${researchResult.bestPractices.join('\n')}
+
+Implementation challenges:
+${researchResult.pitfalls.join('\n')}
+`
+    };
+    
+    // Use the standard complexity analyzer with enhanced task info
+    const { analyzeTaskComplexity } = await import('./cursor-ai-adapter.js');
+    return await analyzeTaskComplexity(enhancedTask);
+  } catch (error) {
+    log('error', `Error analyzing task complexity with research: ${error.message}`);
+    throw error;
+  }
+}
+
+export { 
+  generateSubtasksWithResearch,
+  analyzeTaskComplexityWithResearch
+};
+```
+
+## 3. Modify AI Service Module
+
+Update `scripts/modules/ai-services.js` to replace all API-dependent functionality:
+
+```javascript
+// Import Cursor adapters
+import * as cursorAdapter from './cursor-ai-adapter.js';
+import * as perplexityAdapter from './perplexity-adapter.js';
+import { CONFIG, log } from './utils.js';
+
+/**
+ * Call Claude or Cursor equivalent to generate tasks from PRD
+ * @param {string} prdContent - PRD content
+ * @param {string} prdPath - Path to the PRD file
+ * @param {number} numTasks - Number of tasks to generate
+ * @returns {Object} Generated tasks
+ */
+async function callClaude(prdContent, prdPath, numTasks) {
+  // Always use Cursor adapter regardless of API key
+  log('info', 'Using Cursor integration for task generation...');
+  return await cursorAdapter.callClaude(prdContent, prdPath, numTasks);
+}
+
+/**
+ * Generate subtasks for a task
+ * @param {Object} task - The task to expand
+ * @param {number} numSubtasks - Number of subtasks to generate
+ * @param {number} nextSubtaskId - Next subtask ID
+ * @param {string} additionalContext - Additional context
+ * @returns {Array} Generated subtasks
+ */
+async function generateSubtasks(task, numSubtasks, nextSubtaskId, additionalContext = '') {
+  log('info', 'Using Cursor integration for subtask generation...');
+  return await cursorAdapter.generateSubtasks(task, numSubtasks, nextSubtaskId, additionalContext);
+}
+
+/**
+ * Analyze task complexity
+ * @param {Object} task - The task to analyze
+ * @returns {Object} Complexity analysis result
+ */
+async function analyzeTaskComplexity(task) {
+  log('info', 'Using Cursor integration for complexity analysis...');
+  return await cursorAdapter.analyzeTaskComplexity(task);
+}
+
+/**
+ * Generate subtasks with research
+ * @param {Object} task - The task to expand
+ * @param {number} numSubtasks - Number of subtasks to generate
+ * @param {number} nextSubtaskId - Next subtask ID
+ * @param {string} additionalContext - Additional context
+ * @returns {Array} Generated subtasks
+ */
+async function generateSubtasksWithPerplexity(task, numSubtasks = 3, nextSubtaskId = 1, additionalContext = '') {
+  log('info', 'Using Cursor integration for research-backed subtask generation...');
+  return await perplexityAdapter.generateSubtasksWithResearch(task, numSubtasks, nextSubtaskId, additionalContext);
+}
+
+/**
+ * Analyze task complexity with research
+ * @param {Object} task - The task to analyze
+ * @returns {Object} Complexity analysis result
+ */
+async function analyzeTaskComplexityWithPerplexity(task) {
+  log('info', 'Using Cursor integration for research-backed complexity analysis...');
+  return await perplexityAdapter.analyzeTaskComplexityWithResearch(task);
+}
+
+// Export all functions with their original names to maintain compatibility
+export {
+  callClaude,
+  generateSubtasks,
+  analyzeTaskComplexity,
+  generateSubtasksWithPerplexity,
+  analyzeTaskComplexityWithPerplexity
+};
+```
+
+## 4. Update Dependency Files
+
+### Update package.json
+
+Remove API dependencies that are no longer needed:
+
+```json
+// Remove these dependencies:
+"@anthropic-ai/sdk": "^0.17.1",
+"openai": "^4.28.0",
+```
+
+### Update .env.example
+
+```
+# API Keys - No longer required when using Cursor integration
+# ANTHROPIC_API_KEY=not_required_with_cursor_integration
+# PERPLEXITY_API_KEY=not_required_with_cursor_integration
+
+# Configuration
+MODEL=not_required_with_cursor_integration
+MAX_TOKENS=4000
+TEMPERATURE=0.7
+DEBUG=false
+LOG_LEVEL=info
+DEFAULT_SUBTASKS=3
+DEFAULT_PRIORITY=medium
+PROJECT_NAME="My Project"
+PROJECT_VERSION="1.0.0"
+```
+
+## 5. Modify Command Options
+
+Update the `scripts/modules/commands.js` file to modify options for analyze-complexity and expand commands:
+
+```javascript
+// For analyze-complexity command
+.option('-r, --research', 'Use Cursor for research-backed analysis (more comprehensive)')
+
+// For expand command
+.option('-r, --research', 'Use Cursor for research-backed expansion (more comprehensive)')
+```
+
+## 6. Update CLI Messages
+
+Modify UI messages in `scripts/modules/ui.js` to reflect the use of Cursor instead of API services:
+
+```javascript
+// For example, update this line:
+console.log(`Researching task "${task.title}" using Cursor Claude 3.7 Sonnet...`);
+
+// And this one:
+console.log(`Expanding task "${task.title}" using Cursor Claude 3.7 Sonnet...`);
+```
+
+## 7. Add Documentation to README.md
+
+Add this section to the project's README.md file:
+
+```markdown
+## Using Cursor Integration
+
+This version of Task Master CLI is designed to work entirely with Cursor's built-in Claude 3.7 Sonnet, without requiring any external API keys:
+
+1. Run Task Master commands as normal - no API keys are required
+2. When AI functionality is needed, the CLI will:
+   - Generate prompt files in the `cursor_prompts` directory
+   - Provide instructions to open these files in Cursor
+   - Wait for you to process the prompts with Cursor and save the responses
+   - Continue processing with the saved responses
+
+### Key Features
+
+- **PRD Parsing**: Generate tasks from PRD documents using Cursor
+- **Task Expansion**: Break down tasks into subtasks using Cursor
+- **Complexity Analysis**: Analyze task complexity using Cursor
+- **Research-Backed Analysis**: Generate more comprehensive task breakdowns with Cursor's research capabilities
+
+### Example Workflow
+
+1. Run a command like `task-master parse-prd --input=requirements.txt`
+2. Follow the on-screen instructions to interact with Cursor
+3. Review and save Cursor's responses to the specified files
+4. The CLI will continue processing with the saved responses
+
+This interactive approach allows you to benefit from Cursor's AI capabilities while maintaining full control over the process.
+```
+
+## 8. Testing Instructions
+
+Add a testing section to ensure the implementation works correctly:
+
+```markdown
+## Testing the Cursor Integration
+
+1. Make sure you have removed or commented out any API keys in your .env file
+2. Run a simple command that requires AI functionality:
+   ```
+   task-master analyze-complexity --id=1
+   ```
+3. Follow the on-screen instructions to interact with Cursor
+4. Verify that the command completes successfully using the Cursor-generated response
+5. Test additional commands to ensure all functionality works as expected
+6. If any issues occur, check the error messages and the generated prompt/response files
+```
+
+## 9. Troubleshooting Guide
+
+Add these additional troubleshooting items to the existing section:
+
+```markdown
+- **Response Format Errors**: If Cursor includes explanatory text in its response, make sure to edit the response file to contain only valid JSON
+- **Multiple Prompts Handling**: For commands that require multiple prompts, process them one at a time as instructed by the CLI
+- **Consistency Between Commands**: Make sure responses maintain consistency between related commands (e.g., between analyze-complexity and expand)
+- **Performance Considerations**: Interactive Cursor workflow may be slower than API calls - plan accordingly for large projects
+```
+
+This complete implementation ensures that the entire Task Master CLI functionality works with Cursor Claude 3.7 Sonnet without requiring any external API keys.
